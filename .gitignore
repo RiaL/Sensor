@@ -1,0 +1,15 @@
+# NetBeans #
+/Monitor/nbproject/private/
+/Monitor/build/
+/Monitor/nbbuild/
+/Monitor/dist/
+/Monitor/nbdist/
+/Monitor/nbactions.xml
+/Monitor/nb-configuration.xml
+
+# Java #
+*.class
+*.jar
+*.war
+*.ear
+
