@@ -76,6 +76,9 @@ public class Monitor implements Runnable {
                     SocketChannel sensorSocket = sensorChannel.accept();
                     sensorSocket.read(bb);
                     String msg = new String(bb.array());
+                    
+                    //DO TESTOWANIA:
+                    System.out.println("Wiadomosc z sensora: \n" + msg + "\n\n");
 
                     //odczytać który to sensor
                     InputStream is = new StringBufferInputStream(msg);
@@ -84,6 +87,9 @@ public class Monitor implements Runnable {
                     //przygotować dane do wysłania
                     String value = XMLParser.getValueFromXml(is);
                     String msgForClient = XMLParser.createMeasurementInfoForClient(sensor, value);
+                    
+                    //DO TESTOWANIA:
+                    System.out.println("Wiadomosc dla klientow: \n" + msgForClient + "\n\n");
                     
                     //sprawdzić na liście subskrypcji kto to ma i wysłać na podane porty
                     for (Iterator<SelectionKey> i = keys.iterator(); i.hasNext();) {
