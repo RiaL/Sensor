@@ -2,6 +2,8 @@ package monitor;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.sql.Timestamp;
+import java.util.Date;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -71,4 +73,15 @@ public class XMLParser {
         
         return value;
     }
+    
+    public static String createMeasurementInfoForClient(Sensor sensor, String value){
+        Timestamp ts = new Timestamp(new Date().getTime());
+        String xml = "";
+        xml += ( "<measurement resourceId=\"" + sensor.getResourceId() + "\" metric=\"" + sensor.getMetric() + "\">" );
+        xml += ( "<timestamp>" + ts + "</timestamp>" );
+        xml += ( "<value>" + value + "</value>" );
+        xml += "</measurement>";
+        return xml;
+    }
+
 }

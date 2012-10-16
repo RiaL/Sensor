@@ -2,7 +2,6 @@ package monitor;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.StringBufferInputStream;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
@@ -40,10 +39,12 @@ public class Monitor implements Runnable {
     @Override
     public void run() {
         try {
+            this.selector = Selector.open();
+            
             ServerSocketChannel sensorChannel = ServerSocketChannel.open();
             sensorChannel.socket().bind(new InetSocketAddress(sensorPort));
             sensorChannel.configureBlocking(false);
-            sensorChannel.register(selector, SelectionKey.OP_READ);
+            sensorChannel.register(selector, SelectionKey.OP_ACCEPT);
             
             while(true){
                 selector.select();
@@ -57,7 +58,7 @@ public class Monitor implements Runnable {
                     Channel c = (Channel) key.channel();
                     
                     //czy port sensora jest otwarty do czytania?
-                    if(key.isReadable() && c == sensorChannel){
+                    if(key.isAcceptable() && c == sensorChannel){
                         sensorData = true;
                         i.remove();
                         break;
@@ -81,75 +82,36 @@ public class Monitor implements Runnable {
                     Sensor sensor = XMLParser.getSensorFromXml(is);
                     
                     //przygotować dane do wysłania
+                    String value = XMLParser.getValueFromXml(is);
+                    String msgForClient = XMLParser.createMeasurementInfoForClient(sensor, value);
                     
+                    //sprawdzić na liście subskrypcji kto to ma i wysłać na podane porty
+                    for (Iterator<SelectionKey> i = keys.iterator(); i.hasNext();) {
+                        SelectionKey key = (SelectionKey) i.next();
+                        i.remove();
+                        SocketChannel sc = (SocketChannel) key.channel();
+                        
+                        int index = clientChannels.indexOf(sc);
                     
-                    //sprawdzić na liście subskrypcji kto to ma
-                    //wysłać na dane porty
-                    
+                        //czy dany port jest otwarty do pisania i czy jest na liście klientów?
+                        if(key.isWritable() && ( index != -1 ) ){
+                            int port = clientChannels.get(index).socket().getLocalPort();
+                            Sensor sensorZListy = subscriptions.get(new Integer(port));
+                            
+                            if( sensor.equals(sensorZListy) ){
+                                //TAK! on ma dostać subskrybcję!
+                                sc.configureBlocking(false);
+                                ByteBuffer buf = ByteBuffer.allocateDirect(4096);
+	                        buf.clear();
+	                        buf.put(msgForClient.getBytes());
+	                        buf.flip();
+		                sc.write(buf);
+                            }
+                        }
+                    }
                 }
-                
-                /*
-                
-		        		if (key.isReadable() && c == udpserver) {
-		        			byte[] buffer = new byte[4096];
-		        			SocketAddress address = udpserver.receive(receiveBuffer);
-		        			buffer = receiveBuffer.array();
-		        			String msg = new String(buffer);
-		        			processSensorMessage(address, msg);
-		        		} else 
-			        		if (key.isReadable() && c == tcpserver) {
-			        			System.out.println("READ");
-			        			
-			        		}
-		        		
-		        		if (key.isAcceptable()) {
-		        			SocketChannel client = tcpserver.accept();
-		        			client.configureBlocking(false);
-		        			
-		                    if (client != null) {
-		                    	processClientMessage(client, null);
-		                    }
-		                    
-		        		}
-		        		
-		        		if (key.isReadable() && c != udpserver) {
-		        			SocketChannel client = (SocketChannel) key.channel();
-
-		        	        ByteBuffer buffer = ByteBuffer.allocate(4096);
-		        	        int numRead = -1;
-		        	        try {
-		        	            numRead = client.read(buffer);
-		        	        }
-		        	        catch (IOException e) {
-		        	            e.printStackTrace();
-		        	        }
-
-		        	        if (numRead != -1) {
-			        			processClientMessage(client, buffer);
-		        	        }
-		        		}
-		        		
-		        		if (key.isWritable()) {
-		                    SocketChannel client = (SocketChannel) key.channel();
-		                    client.configureBlocking(false);
-	                        ByteBuffer buf = ByteBuffer.allocateDirect(4096);
-	                        String msg = (String)key.attachment();
-	                        if (msg.equals("Close")) {
-	                        	client.close();
-	                        } else {
-	                            buf.clear();
-	                            buf.put(msg.getBytes());
-	                            buf.flip();
-		                        client.write(buf);
-		                        
-		        				key.interestOps(SelectionKey.OP_READ);
-	                        }
-		        		}
-		        		receiveBuffer.flip();
-				  } */
-                
             }
-                
+            
         } catch (IOException ex) {
             //zrobić coś z wyjątkami?
             ex.printStackTrace();
@@ -178,7 +140,7 @@ public class Monitor implements Runnable {
         clientChannel.socket().bind(new InetSocketAddress(i));
         clientChannel.configureBlocking(false);
         clientChannels.add(clientChannel);
-        clientChannel.register(selector, SelectionKey.OP_READ);
+        clientChannel.register(selector, SelectionKey.OP_ACCEPT);
         
         subscriptions.put(i, s);
         
