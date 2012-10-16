@@ -56,7 +56,7 @@ import java.io.IOException;
  *    Format XMLa:
  *    <measurement>
  *      <resourceId>host1</resourceId>
- *      <metric>param1</param>
+ *      <metric>param1</metric>
  *      <value>0.92</value>
  *    </measurement>
  * 
