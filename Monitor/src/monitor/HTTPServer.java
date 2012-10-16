@@ -4,6 +4,7 @@ import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.util.HashMap;
@@ -30,6 +31,7 @@ public class HTTPServer {
     }
     
     static class SubscriptionsHandler implements HttpHandler {
+        
         @Override
         public void handle(HttpExchange t) throws IOException {
             String method = t.getRequestMethod();
@@ -37,50 +39,119 @@ public class HTTPServer {
             
             /***** nowa subskrypcja *****/
             if( method.equalsIgnoreCase("POST") && path.equalsIgnoreCase(Config.HTTPSubscriptionsResourceName) ){
-                //TODO: klient chce subskrybcję określonego zasobu i metryki
-                //UTWORZENIE SUBSKRYPCJI NA MONITORZE! każda subskrypcja na monitorze ma osobny port
-                //UTWORZENIE SUBSKRYPCJI W REJESTRZE!
                 
-                //jeżeli taka jest to zostaje dopisana do listy, a klient dostaje jej adres
-                //jeżeli nie ma to odpowiednie info zwrotne
-            
+                //wyszukaj taki zasób w rejestrze:
+                InputStream is = t.getRequestBody();
+                Sensor sensor = XMLParser.getSensorFromXml(is);
+                if( register.containsKey(sensor) ){
+                    Monitor monitor = register.get(sensor);
+                    int port = monitor.addSubscription(sensor);
+                    
+                    Integer i = new Integer(0);
+                    //znajdź pierwszy wolny numer subskrybcji
+                    while( subscriptions.containsKey(i) ){
+                        i++;
+                    }
+                    subscriptions.put(i, new Subscription(port, sensor, monitor));
+        
+                    //wyślij odpowiedź do klienta
+                    String response = "Location: 127.0.0.1" + Config.HTTPSubscriptionsResourceName + "/" + i;
+                    //DO TESTOWANIA:
+                    System.out.println(response);
+                    
+                    t.sendResponseHeaders(201, response.length());
+                    OutputStream os = t.getResponseBody();
+                    os.write(response.getBytes());
+                    os.close();
+                    
+                } else {
+                    //brak podanego zasobu
+                    String response = "Sensor [ " + sensor.getResourceId() + ", " + sensor.getMetric() + " ] not exists";
+                    //DO TESTOWANIA:
+                    System.out.println(response);
+                    
+                    t.sendResponseHeaders(404, response.length());
+                    OutputStream os = t.getResponseBody();
+                    os.write(response.getBytes());
+                    os.close();
+                }
+
+                
             /***** pobierz subskrypcję *****/
             } else if( method.equalsIgnoreCase("GET") && !path.replace(Config.HTTPSubscriptionsResourceName,"").isEmpty() ){
-                int resourceId = Integer.parseInt(path.replace(Config.HTTPSubscriptionsResourceName+"/", ""));
+                int subscriptionId = Integer.parseInt(path.replace(Config.HTTPSubscriptionsResourceName+"/", ""));
                 
-                //OTWARCIE PORTU NA MONITORZE
-                
-                
-                
-                String response = "This is the response";
-                t.sendResponseHeaders(200, response.length());
-                OutputStream os = t.getResponseBody();
-                os.write(response.getBytes());
-                os.close();
+                if( subscriptions.containsKey(new Integer(subscriptionId)) ){
+                    Subscription sub = subscriptions.get(new Integer(subscriptionId));
+                    
+                    //TODO: OTWARCIE PORTU NA MONITORZE
+                    
+                    //wyślij odpowiedź do klienta
+                    String response = XMLParser.createSubscriptionInfoXml(subscriptionId, "127.0.0.1", sub.getClientPort());
+                    //DO TESTOWANIA:
+                    System.out.println(response);
+                    
+                    t.sendResponseHeaders(201, response.length());
+                    OutputStream os = t.getResponseBody();
+                    os.write(response.getBytes());
+                    os.close();
+                    
+                } else {
+                    //brak podanej subskrypcji
+                    String response = "Subscription " + subscriptionId + " not exists";
+                    //DO TESTOWANIA:
+                    System.out.println(response);
+                    
+                    t.sendResponseHeaders(404, response.length());
+                    OutputStream os = t.getResponseBody();
+                    os.write(response.getBytes());
+                    os.close();
+                }
+
             
             /***** usuń subskrypcję *****/
             } else if( method.equalsIgnoreCase("DELETE") && !path.replace(Config.HTTPSubscriptionsResourceName,"").isEmpty() ){
-                //TODO: klient chce skasować subskrybcję
-                //monitor ją wykreśla z listy subskrybcji
-                //i zamyka połączenie + kasuje je z listy aktywnych połączeń
+                int subscriptionId = Integer.parseInt(path.replace(Config.HTTPSubscriptionsResourceName+"/", ""));
                 
+                if( subscriptions.containsKey(new Integer(subscriptionId)) ){
+                    Subscription sub = subscriptions.get(new Integer(subscriptionId));
+                    
+                    //usuwanie subskrypcji z monitora
+                    sub.getMonitor().removeSubscription(sub.getClientPort());
+                    //usuwanie subskrypcji z serwera
+                    subscriptions.remove(new Integer(subscriptionId));
+                    
+                    //odpowiedź nie jest wysyłana do klienta
+                    
+                } else {
+                    //brak podanej subskrypcji
+                    String response = "Subscription " + subscriptionId + " not exists";
+                    //DO TESTOWANIA:
+                    System.out.println(response);
+                    
+                    t.sendResponseHeaders(404, response.length());
+                    OutputStream os = t.getResponseBody();
+                    os.write(response.getBytes());
+                    os.close();
+                }
+                
+                
+            /***** wszystkie pozostałe zapytania *****/
             } else {
-                //TODO: błędne zapytanie - zwrócić 404
+                //błędne zapytanie
+                String response = "What are you doing?";
+                //DO TESTOWANIA:
+                System.out.println(response);
                 
-            }
-            
-            
-            /*
-            System.out.println(t.getRequestURI().getPath().replace("/subscriptions/", ""));
-            if( method.equalsIgnoreCase("GET") ){
-                String response = "This is the response";
-                t.sendResponseHeaders(200, response.length());
+                t.sendResponseHeaders(400, response.length());
                 OutputStream os = t.getResponseBody();
                 os.write(response.getBytes());
                 os.close();
-            }*/
+                
+            }
             
         }
+        
     }
 
 }

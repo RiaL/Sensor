@@ -22,5 +22,9 @@ public class Subscription {
     public Sensor getSensor() {
         return sensor;
     }
+
+    public Monitor getMonitor() {
+        return monitor;
+    }
     
 }

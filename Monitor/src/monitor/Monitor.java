@@ -32,6 +32,25 @@ public class Monitor implements Runnable {
         //TODO: dodać go do monitora!
     }
     
+    /**
+     * @param s Sensor, na którym ktoś chce nasłuchiwać
+     * @return port, na którym będzie mógł nasłuchiwać
+     */
+    public int addSubscription(Sensor s){
+        Integer i = new Integer(subscriptionStartPort);
+        //znajdź pierwszy wolny port
+        while( subscriptions.containsKey(i) ){
+            i++;
+        }
+        subscriptions.put(i, s);
+        return i;
+    }
+    
+    public void removeSubscription(int port){
+        //TODO: monitor ją wykreśla z listy subskrybcji
+        //i zamyka połączenie + kasuje je z listy aktywnych połączeń
+    }
+    
     @Override
     public boolean equals(Object o) {
 	if (!(o instanceof Monitor))
