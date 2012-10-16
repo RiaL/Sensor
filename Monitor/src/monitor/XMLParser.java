@@ -47,4 +47,28 @@ public class XMLParser {
         xml += "</subscription>";
         return xml;
     }
+    
+    public static String getValueFromXml(InputStream is){
+	//get the factory
+	DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+        String value = "";
+        
+	try {
+            //Using factory get an instance of document builder
+            DocumentBuilder db = dbf.newDocumentBuilder();
+            //parse using builder to get DOM representation of the XML file
+            Document dom = db.parse(is);
+            //powinien być dokładnie jeden taki element
+            value = dom.getElementsByTagName("value").item(0).getNodeValue();
+
+	}catch(ParserConfigurationException pce) {
+            pce.printStackTrace();
+	}catch(SAXException se) {
+            se.printStackTrace();
+	}catch(IOException ioe) {
+            ioe.printStackTrace();
+	}
+        
+        return value;
+    }
 }

@@ -84,8 +84,6 @@ public class HTTPServer {
                 if( subscriptions.containsKey(new Integer(subscriptionId)) ){
                     Subscription sub = subscriptions.get(new Integer(subscriptionId));
                     
-                    //TODO: OTWARCIE PORTU NA MONITORZE
-                    
                     //wyślij odpowiedź do klienta
                     String response = XMLParser.createSubscriptionInfoXml(subscriptionId, "127.0.0.1", sub.getClientPort());
                     //DO TESTOWANIA:
