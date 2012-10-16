@@ -85,6 +85,9 @@ public class Monitor implements Runnable {
                     String value = XMLParser.getValueFromXml(is);
                     String msgForClient = XMLParser.createMeasurementInfoForClient(sensor, value);
                     
+                    //DO TESTOWANIA:
+                    System.out.println("Wiadomosc dla klientow: \n" + msgForClient + "\n\n");
+                    
                     //sprawdzić na liście subskrypcji kto to ma i wysłać na podane porty
                     for (Iterator<SelectionKey> i = keys.iterator(); i.hasNext();) {
                         SelectionKey key = (SelectionKey) i.next();
