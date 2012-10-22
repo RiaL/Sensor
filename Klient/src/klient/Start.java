@@ -1,8 +1,8 @@
 package klient;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
+import java.util.LinkedList;
+import java.util.List;
 
 /**
  * Start klienta!
@@ -47,27 +47,34 @@ public class Start {
 
     public static void main(String[] args) {
         System.out.println("Witaj w Kliencie!");
+        List<Subscription> subscriptions = new LinkedList<Subscription>();
         int opt = -1;
+        
         while(opt != 0){
             try {
                 printMenu();
-                opt = readInteger();
+                opt = IO.readInteger();
                 switch(opt){
                     case 1 :
-                        System.out.println("opcja 1");
-                        //TODO: tutaj obsługa
+                        SubscriptionsHandler.newSubscription(subscriptions);
                         break;
                     case 2 :
-                        System.out.println("opcja 2");
-                        //TODO: tutaj obsługa
+                        if(subscriptions.size() > 0)
+                            SubscriptionsHandler.getSubscription(subscriptions);
+                        else
+                            System.out.println("Brak subskrypcji!");
                         break;
                     case 3 :
-                        System.out.println("opcja 3");
-                        //TODO: tutaj obsługa
+                        if(subscriptions.size() > 0)
+                            SubscriptionsHandler.connectHost(subscriptions);
+                        else
+                            System.out.println("Brak subskrypcji!");
                         break;
                     case 4 :
-                        System.out.println("opcja 4");
-                        //TODO: tutaj obsługa
+                        if(subscriptions.size() > 0)
+                            SubscriptionsHandler.closeSubscription(subscriptions);
+                        else
+                            System.out.println("Brak subskrypcji!");
                         break;
                 }
             } catch (IOException ex) {
@@ -86,10 +93,5 @@ public class Start {
         System.out.println("4 - zakoncz subskrypcje");
         System.out.println("0 - wyjdz");
         System.out.println("-----------------------");
-    }
-    
-    private static int readInteger() throws IOException{
-        BufferedReader stdin = new BufferedReader(new InputStreamReader(System.in), 1);
-        return Integer.parseInt(stdin.readLine());
     }
 }
