@@ -1,6 +1,13 @@
 package klient;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLConnection;
 import java.util.List;
 
 /**
@@ -9,29 +16,56 @@ import java.util.List;
  */
 public class SubscriptionsHandler {
     public static void newSubscription(List<Subscription> subscriptions){
+        String xml = "";
+        String resourceId = "";
+        String metric = "";
         try {
             System.out.println("--- newSubscription ---");
-            
+
             System.out.println("Podaj resourceId:");
-            String resourceId = IO.readString();
+            resourceId = IO.readString();
             System.out.println("Podaj metric:");
-            String metric = IO.readString();
-            
+            metric = IO.readString();
+
             //stwórz XMLa
-            String xml = XMLParser.createNewSubscriptionXML(resourceId, metric);
-                    
-            //TODO: wyślij żądanie do serwera (Config.HTTPAddress)
-            
-            
-            //TODO: w zależności od odpowiedzi
-            //albo nie przypisuj nic (i wyświetl komunikat o niepowodzeniu)
-            
-            
-            //albo stwórz nową subskrypcję, nadaj jej resourceId, metric i location i wrzuć do listy
-            
-            
+            xml = XMLParser.createNewSubscriptionXML(resourceId, metric);
         } catch (IOException ex) {
             System.out.println("Zle wpisane wartosci!");
+        }
+        try {
+            //wyślij żądanie do serwera
+            URL url = new URL(Config.HTTPAddress);
+            URLConnection connection = url.openConnection();
+            ((HttpURLConnection)connection).setRequestMethod("POST");
+            connection.setDoOutput(true);
+            OutputStreamWriter out = new OutputStreamWriter(connection.getOutputStream());
+            out.write(xml);
+            out.close();
+
+            BufferedReader in = new BufferedReader(
+                    new InputStreamReader(
+                    connection.getInputStream()));
+            String response = in.readLine();
+            in.close();
+            
+            if( response.startsWith("Location") ){
+                //stwórz nową subskrypcję, nadaj jej resourceId, metric i location i wrzuć do listy
+                Subscription sub = new Subscription();
+                sub.setResourceId(resourceId);
+                sub.setMetric(metric);
+                sub.setLocation(response.replaceFirst("Location: ", ""));
+                subscriptions.add(sub);
+            } else {
+                //nie przypisuj nic (i wyświetl komunikat o niepowodzeniu)
+                System.out.println("Blad! Odpowiedz serwera: " + response);
+            }
+            
+        } catch (MalformedURLException ex) {
+            System.out.println("Zly adres!");
+        } catch (IOException ex) {
+            System.out.println("Problemy z polaczeniem!");
+            System.out.println(ex.getMessage());
+            ex.printStackTrace();
         }
     }
     

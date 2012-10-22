@@ -27,8 +27,8 @@ public class XMLParser {
             //parse using builder to get DOM representation of the XML file
             Document dom = db.parse(is);
             //powinien być dokładnie jeden taki element
-            resourceId = dom.getElementsByTagName("resourceId").item(0).getNodeValue();
-            metric = dom.getElementsByTagName("metric").item(0).getNodeValue();
+            resourceId = dom.getElementsByTagName("resourceId").item(0).getFirstChild().getNodeValue();
+            metric = dom.getElementsByTagName("metric").item(0).getFirstChild().getNodeValue();
 	}catch(ParserConfigurationException pce) {
             pce.printStackTrace();
 	}catch(SAXException se) {
@@ -60,7 +60,7 @@ public class XMLParser {
             //parse using builder to get DOM representation of the XML file
             Document dom = db.parse(is);
             //powinien być dokładnie jeden taki element
-            value = dom.getElementsByTagName("value").item(0).getNodeValue();
+            value = dom.getElementsByTagName("value").item(0).getFirstChild().getNodeValue();
 
 	}catch(ParserConfigurationException pce) {
             pce.printStackTrace();

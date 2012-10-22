@@ -79,6 +79,8 @@ public class Start {
                 }
             } catch (IOException ex) {
                 //do nothing (została podana zła liczba, wyświetli się ponownie menu)
+            } catch (NumberFormatException ex){
+                //do nothing (została podana zła liczba, wyświetli się ponownie menu)
             }
         }
         System.out.println("Zegnaj!");

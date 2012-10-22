@@ -6,11 +6,12 @@ package klient;
  */
 public class XMLParser {
     public static String createNewSubscriptionXML(String resourceId, String metric){
-        String XML = "";
-        
-        //TODO: uzupełnij!
-        
-        return XML;
+        String xml = "";
+        xml = xml + "<subscribe>";
+        xml = xml + "<resourceId>" + resourceId + "</resourceId>";
+        xml = xml + "<metric>" + metric + "</metric>";
+        xml = xml + "</subscribe>";
+        return xml;
     }
     
     //TODO: funkcje pobierające dane z XMLów otrzymanych przy pobieraniu subskrypcji

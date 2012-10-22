@@ -70,7 +70,7 @@ public class HTTPServer {
                     //DO TESTOWANIA:
                     System.out.println(response);
                     
-                    t.sendResponseHeaders(404, response.length());
+                    t.sendResponseHeaders(201, response.length());
                     OutputStream os = t.getResponseBody();
                     os.write(response.getBytes());
                     os.close();
