@@ -3,6 +3,8 @@ package monitor;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringBufferInputStream;
+import java.sql.Timestamp;
+import java.util.Date;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.Channel;
@@ -77,16 +79,30 @@ public class Monitor implements Runnable {
                     sensorSocket.read(bb);
                     String msg = new String(bb.array());
                     
-                    //DO TESTOWANIA:
-                    System.out.println("Wiadomosc z sensora: \n" + msg + "\n\n");
+                    System.out.println(msg);
+//                    
+//                    //DO TESTOWANIA:
+//                    System.out.println("Wiadomosc z sensora: \n" + msg + "\n\n");
+//
+//                    //odczytać który to sensor
+//                    InputStream is = new StringBufferInputStream(msg.trim());
+//                    Sensor sensor = XMLParser.getSensorFromXml(is);
+//                    
+//                    //przygotować dane do wysłania
+//
+//                    String value = XMLParser.getValueFromXml(is); // Tu jest dupa
+//                    String msgForClient = XMLParser.createMeasurementInfoForClient(sensor, value);
+//                    
 
-                    //odczytać który to sensor
-                    InputStream is = new StringBufferInputStream(msg);
-                    Sensor sensor = XMLParser.getSensorFromXml(is);
                     
-                    //przygotować dane do wysłania
-                    String value = XMLParser.getValueFromXml(is);
-                    String msgForClient = XMLParser.createMeasurementInfoForClient(sensor, value);
+                    String resourceId = msg.substring(0, msg.indexOf(":"));
+                    String metric = msg.substring(msg.indexOf(":") + 1, msg.lastIndexOf(":"));
+                    String value = msg.substring(msg.lastIndexOf(":") + 1);
+                    value = value.trim();
+                    System.out.println(resourceId + "\n" + metric + "\n" +value);
+                    
+                    Sensor sensor = new Sensor(resourceId, metric);
+                    String msgForClient = createMeasurementInfoForClient(sensor, value);
                     
                     //DO TESTOWANIA:
                     System.out.println("Wiadomosc dla klientow: \n" + msgForClient + "\n\n");
@@ -162,6 +178,16 @@ public class Monitor implements Runnable {
             }
         }
         subscriptions.remove(new Integer(port));
+    }
+    
+    public String createMeasurementInfoForClient(Sensor sensor, String value){
+        Timestamp ts = new Timestamp(new Date().getTime());
+        String xml = "";
+        xml += ( "<measurement resourceId=\"" + sensor.getResourceId() + "\" metric=\"" + sensor.getMetric() + "\">" );
+        xml += ( "<timestamp>" + ts + "</timestamp>" );
+        xml += ( "<value>" + value + "</value>" );
+        xml += "</measurement>";
+        return xml;
     }
     
     @Override

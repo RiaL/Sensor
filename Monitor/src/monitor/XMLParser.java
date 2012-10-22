@@ -25,12 +25,10 @@ public class XMLParser {
             //Using factory get an instance of document builder
             DocumentBuilder db = dbf.newDocumentBuilder();
             //parse using builder to get DOM representation of the XML file
-            System.out.println("dupa");
             Document dom = db.parse(is);
             //powinien być dokładnie jeden taki element
             resourceId = dom.getElementsByTagName("resourceId").item(0).getNodeValue();
             metric = dom.getElementsByTagName("metric").item(0).getNodeValue();
-
 	}catch(ParserConfigurationException pce) {
             pce.printStackTrace();
 	}catch(SAXException se) {
