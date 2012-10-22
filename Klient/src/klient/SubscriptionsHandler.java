@@ -55,6 +55,7 @@ public class SubscriptionsHandler {
                 sub.setMetric(metric);
                 sub.setLocation(response.replaceFirst("Location: ", ""));
                 subscriptions.add(sub);
+                System.out.println("Dodano subskrypcje!");
             } else {
                 //nie przypisuj nic (i wyświetl komunikat o niepowodzeniu)
                 System.out.println("Blad! Odpowiedz serwera: " + response);
@@ -72,19 +73,25 @@ public class SubscriptionsHandler {
     public static void getSubscription(List<Subscription> subscriptions){
         System.out.println("--- getSubscription ---");
         int subIndex = selectSubscription(subscriptions);
-        //TODO: jeżeli ta subskrypcja ma już host i port, nie rób nic, tylko wypisz komunikat
+        Subscription sub = subscriptions.get(subIndex);
+        
+        //jeżeli ta subskrypcja ma już host i port, nie rób nic, tylko wypisz komunikat
+        if( sub.getHost().equals("") || sub.getPort().equals("") ){
+            System.out.println("Ta subskrypcja jest juz pobrana!");
+        } else {
+            
+            //TODO: wyślij żądanie do serwera
         
         
-        //TODO: wyślij żądanie do serwera
+            //TODO: w zależności od odpowiedzi:
+            //albo nie przypisuj nic (i wyświetl komunikat o niepowodzeniu)
         
         
-        //TODO: w zależności od odpowiedzi:
-        //albo nie przypisuj nic (i wyświetl komunikat o niepowodzeniu)
-        
-        
-        //albo wyciągnij host i port z XMLa (funkcja w XMLParser) i przypisz do odpowiedniej subskrypcji na liście
-        
-        
+            //albo wyciągnij host i port z XMLa (funkcja w XMLParser) i przypisz do odpowiedniej subskrypcji na liście
+            
+            
+            
+        }
     }
     
     public static void connectHost(List<Subscription> subscriptions){

@@ -162,6 +162,8 @@ public class Monitor implements Runnable {
         clientChannel.socket().bind(new InetSocketAddress(i));
         clientChannel.configureBlocking(false);
         clientChannels.add(clientChannel);
+        
+        //TODO: na poniższej linijce się wiesza...
         clientChannel.register(selector, SelectionKey.OP_ACCEPT);
         
         subscriptions.put(i, s);

@@ -70,7 +70,7 @@ public class HTTPServer {
                     //DO TESTOWANIA:
                     System.out.println(response);
                     
-                    t.sendResponseHeaders(201, response.length());
+                    t.sendResponseHeaders(202, response.length());
                     OutputStream os = t.getResponseBody();
                     os.write(response.getBytes());
                     os.close();
@@ -89,7 +89,7 @@ public class HTTPServer {
                     //DO TESTOWANIA:
                     System.out.println(response);
                     
-                    t.sendResponseHeaders(201, response.length());
+                    t.sendResponseHeaders(200, response.length());
                     OutputStream os = t.getResponseBody();
                     os.write(response.getBytes());
                     os.close();
@@ -100,7 +100,7 @@ public class HTTPServer {
                     //DO TESTOWANIA:
                     System.out.println(response);
                     
-                    t.sendResponseHeaders(404, response.length());
+                    t.sendResponseHeaders(202, response.length());
                     OutputStream os = t.getResponseBody();
                     os.write(response.getBytes());
                     os.close();
@@ -127,7 +127,7 @@ public class HTTPServer {
                     //DO TESTOWANIA:
                     System.out.println(response);
                     
-                    t.sendResponseHeaders(404, response.length());
+                    t.sendResponseHeaders(202, response.length());
                     OutputStream os = t.getResponseBody();
                     os.write(response.getBytes());
                     os.close();

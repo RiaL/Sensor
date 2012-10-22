@@ -30,5 +30,15 @@ public class Sensor {
             return true;
 	return false;
     }
-    
+
+    @Override
+    public int hashCode() {
+        int value = 0;
+        for(int i = 0; i < this.resourceId.length(); i++)
+            value += (resourceId.charAt(i));
+        value *= 10;
+        for(int i = 0; i < this.metric.length(); i++)
+            value += (metric.charAt(i));
+        return value;
+    }
 }
