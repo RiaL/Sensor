@@ -5,8 +5,8 @@ package monitor;
  * @author Krzysztof Kutt
  */
 public class Sensor {
-    String resourceId;
-    String metric;
+    private String resourceId;
+    private String metric;
     
     Sensor(String resourceId, String metric){
         this.resourceId = resourceId;
@@ -20,25 +20,50 @@ public class Sensor {
     public String getResourceId() {
         return resourceId;
     }
+
+    public void setMetric(String metric) {
+        this.metric = metric;
+    }
+
+    public void setResourceId(String resourceId) {
+        this.resourceId = resourceId;
+    }    
     
     @Override
     public boolean equals(Object o) {
-	if (!(o instanceof Sensor))
-            return false;
-	Sensor s = (Sensor) o;
-	if (this.resourceId.equals(s.resourceId) && this.metric.equals(s.metric) )
+        if (this == o) {
             return true;
-	return false;
+        }
+        if (o == null) {
+            return false;
+        }
+        if (getClass() != o.getClass()) {
+            return false;
+        }
+        Sensor otherSensor = (Sensor) o;
+        if (metric == null) {
+            if (otherSensor.metric != null) {
+                return false;
+            }
+        } else if (!metric.equals(otherSensor.metric)) {
+            return false;
+        }
+        if (resourceId == null) {
+            if (otherSensor.resourceId != null) {
+                return false;
+            }
+        } else if (!resourceId.equals(otherSensor.resourceId)) {
+            return false;
+        }
+        return true;
     }
 
     @Override
     public int hashCode() {
-        int value = 0;
-        for(int i = 0; i < this.resourceId.length(); i++)
-            value += (resourceId.charAt(i));
-        value *= 10;
-        for(int i = 0; i < this.metric.length(); i++)
-            value += (metric.charAt(i));
-        return value;
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ((metric == null) ? 0 : metric.hashCode());
+        result = prime * result + ((resourceId == null) ? 0 : resourceId.hashCode());
+        return result;
     }
 }

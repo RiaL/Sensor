@@ -30,6 +30,9 @@ import java.io.IOException;
  *      </subscription>
  * 
  * 3) connect z podanym hostem i portem
+ *    wysłać dane:
+ *        subscriptionID-resourceId-metric
+ * 
  *    w odpowiedzi będą w losowych momentach czasu napływały pomiary postaci:
  *    <measurement resourceId="host1" metric="param1">
  *      <timestamp>[tutaj timestamp]</timestamp>
@@ -47,18 +50,9 @@ import java.io.IOException;
  * 
  * Jak sensor może wysyłać dane?
  * 
- * 1) Trzeba najpierw ręcznie dodać w poniższym pliku odpowiednie dane sensora (zasób i metryka) do odpowiedniego monitora
- * 
- * 2) Sensor otwiera połączenie z 127.0.0.1 na porcie monitora (np Config.Monitor1SensorPort)
- *    Wysyła dane w XMLu (poniżej)
- *    Połączenie jest zamykane przez Monitor po odebraniu danych
- * 
- *    Format XMLa:
- *    <measurement>
- *      <resourceId>host1</resourceId>
- *      <metric>param1</metric>
- *      <value>0.92</value>
- *    </measurement>
+ *    Sensor otwiera połączenie z 127.0.0.1 na porcie monitora (np Config.M1_SENSOR_PORT)
+ *    Wysyła dane w formacie:
+ *          resourceId:metric:value
  * 
  * 
  * @author Krzysztof Kutt
@@ -67,25 +61,18 @@ public class Start {
 
     public static void main(String[] args) {
         
-        //serwer obsługujący żądania HTTP
         try{
             HTTPServer.start();
         } catch (IOException ex) {
             System.out.println("Nie udalo sie uruchomic serwera HTTP... :(");
             ex.printStackTrace();
         }
-           
         
-        //monitory obsługujące połączenia TCP
-        Monitor monitor1 = new Monitor(Config.Monitor1SensorPort, Config.Monitor1SubsPorts);
-        //monitor1.addSensor(new Sensor("host1", "param1"));
-        monitor1.addSensor(new Sensor("abc", "cpu"));
-        monitor1.addSensor(new Sensor("host1", "param2"));
+        
+        Monitor monitor1 = new Monitor(Config.M1_CLIENT_PORT, Config.M1_SENSOR_PORT);
         monitor1.run();
         
-        Monitor monitor2 = new Monitor(Config.Monitor2SensorPort, Config.Monitor2SubsPorts);
-        monitor2.addSensor(new Sensor("host2", "param1"));
-        monitor2.addSensor(new Sensor("host3", "param1"));
+        Monitor monitor2 = new Monitor(Config.M2_CLIENT_PORT, Config.M2_SENSOR_PORT);
         monitor2.run();
         
     }

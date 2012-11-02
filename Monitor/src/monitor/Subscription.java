@@ -1,22 +1,19 @@
 package monitor;
 
+import java.nio.channels.SocketChannel;
+
 /**
  *
  * @author Krzysztof Kutt
  */
 public class Subscription {
-    int clientPort;
+    SocketChannel channel;
     Sensor sensor;
     Monitor monitor;
 
-    public Subscription(int clientPort, Sensor sensor, Monitor monitor) {
-        this.clientPort = clientPort;
+    public Subscription(Sensor sensor, Monitor monitor) {
         this.sensor = sensor;
         this.monitor = monitor;
-    }
-
-    public int getClientPort() {
-        return clientPort;
     }
 
     public Sensor getSensor() {
@@ -25,6 +22,14 @@ public class Subscription {
 
     public Monitor getMonitor() {
         return monitor;
+    }
+
+    public SocketChannel getChannel() {
+        return channel;
+    }
+
+    public void setChannel(SocketChannel channel) {
+        this.channel = channel;
     }
     
 }

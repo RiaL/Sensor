@@ -16,15 +16,17 @@ import java.util.HashMap;
 public class HTTPServer {
     static HashMap<Sensor, Monitor> register;  //który sensor jest przy którym monitorze
     static HashMap<Integer, Subscription> subscriptions;  //numer subskrypcji i jej dane
+    static int subscriptionNumber;
     
     public static void start() throws IOException {
-        HttpServer server = HttpServer.create(new InetSocketAddress(Config.HTTPServerPort), 0);
+        HttpServer server = HttpServer.create(new InetSocketAddress(Config.HTTP_SERVER_PORT), 0);
         
         HTTPServer.register = new HashMap<Sensor, Monitor>();
         HTTPServer.subscriptions = new HashMap<Integer, Subscription>();
+        subscriptionNumber = 0;
         
         //lista obslugiwanych zasobów:
-        server.createContext(Config.HTTPSubscriptionsResourceName, new SubscriptionsHandler());
+        server.createContext(Config.HTTP_SUBSCRIPTIONS_PATH, new SubscriptionsHandler());
         
         server.setExecutor(null); //default executor
         server.start();
@@ -38,24 +40,23 @@ public class HTTPServer {
             String path = t.getRequestURI().getPath();
             
             /***** nowa subskrypcja *****/
-            if( method.equalsIgnoreCase("POST") && path.equalsIgnoreCase(Config.HTTPSubscriptionsResourceName) ){
+            if( method.equalsIgnoreCase("POST") && path.equalsIgnoreCase(Config.HTTP_SUBSCRIPTIONS_PATH) ){
                 
                 //wyszukaj taki zasób w rejestrze:
                 InputStream is = t.getRequestBody();
                 Sensor sensor = XMLParser.getSensorFromXml(is);
                 if( register.containsKey(sensor) ){
+                    //monitor, w którym jest ta subskrypcja
                     Monitor monitor = register.get(sensor);
-                    int port = monitor.addSubscription(sensor);
                     
-                    Integer i = new Integer(0);
-                    //znajdź pierwszy wolny numer subskrybcji
-                    while( subscriptions.containsKey(i) ){
-                        i++;
-                    }
-                    subscriptions.put(i, new Subscription(port, sensor, monitor));
+                    //kolejny numer dla subskrypcji
+                    Integer i = new Integer(subscriptionNumber);
+                    subscriptionNumber++;
+                    
+                    subscriptions.put(i, new Subscription(sensor, monitor));
         
                     //wyślij odpowiedź do klienta
-                    String response = "Location: 127.0.0.1" + Config.HTTPSubscriptionsResourceName + "/" + i;
+                    String response = "Location: 127.0.0.1" + Config.HTTP_SUBSCRIPTIONS_PATH + "/" + i;
                     //DO TESTOWANIA:
                     System.out.println(response);
                     
@@ -76,16 +77,16 @@ public class HTTPServer {
                     os.close();
                 }
 
-                
+            
             /***** pobierz subskrypcję *****/
-            } else if( method.equalsIgnoreCase("GET") && !path.replace(Config.HTTPSubscriptionsResourceName,"").isEmpty() ){
-                int subscriptionId = Integer.parseInt(path.replace(Config.HTTPSubscriptionsResourceName+"/", ""));
+            } else if( method.equalsIgnoreCase("GET") && !path.replace(Config.HTTP_SUBSCRIPTIONS_PATH,"").isEmpty() ){
+                int subscriptionId = Integer.parseInt(path.replace(Config.HTTP_SUBSCRIPTIONS_PATH+"/", ""));
                 
                 if( subscriptions.containsKey(new Integer(subscriptionId)) ){
                     Subscription sub = subscriptions.get(new Integer(subscriptionId));
                     
                     //wyślij odpowiedź do klienta
-                    String response = XMLParser.createSubscriptionInfoXml(subscriptionId, "127.0.0.1", sub.getClientPort());
+                    String response = XMLParser.createSubscriptionInfoXml(subscriptionId, "127.0.0.1", sub.getMonitor().getClientPortNumber());
                     //DO TESTOWANIA:
                     System.out.println(response);
                     
@@ -108,14 +109,14 @@ public class HTTPServer {
 
             
             /***** usuń subskrypcję *****/
-            } else if( method.equalsIgnoreCase("DELETE") && !path.replace(Config.HTTPSubscriptionsResourceName,"").isEmpty() ){
-                int subscriptionId = Integer.parseInt(path.replace(Config.HTTPSubscriptionsResourceName+"/", ""));
+            } else if( method.equalsIgnoreCase("DELETE") && !path.replace(Config.HTTP_SUBSCRIPTIONS_PATH,"").isEmpty() ){
+                int subscriptionId = Integer.parseInt(path.replace(Config.HTTP_SUBSCRIPTIONS_PATH+"/", ""));
                 
                 if( subscriptions.containsKey(new Integer(subscriptionId)) ){
                     Subscription sub = subscriptions.get(new Integer(subscriptionId));
                     
                     //usuwanie subskrypcji z monitora
-                    sub.getMonitor().removeSubscription(sub.getClientPort());
+                    sub.getMonitor().removeSubscription(sub.getChannel());
                     //usuwanie subskrypcji z serwera
                     subscriptions.remove(new Integer(subscriptionId));
                     
