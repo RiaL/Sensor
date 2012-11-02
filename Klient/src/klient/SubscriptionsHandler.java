@@ -43,25 +43,30 @@ public class SubscriptionsHandler {
             out.write(xml);
             out.close();
 
-            BufferedReader in = new BufferedReader(
-                    new InputStreamReader(
-                    connection.getInputStream()));
-            String response = in.readLine();
-            in.close();
-            
-            if( response.startsWith("Location") ){
-                //stwórz nową subskrypcję, nadaj jej resourceId, metric i location i wrzuć do listy
-                Subscription sub = new Subscription();
-                sub.setResourceId(resourceId);
-                sub.setMetric(metric);
-                sub.setLocation(response.replaceFirst("Location: ", ""));
-                subscriptions.add(sub);
-                System.out.println("Dodano subskrypcje!");
+            int responseCode = ((HttpURLConnection) connection).getResponseCode();
+            if (responseCode == 201) {
+                BufferedReader in = new BufferedReader(
+                        new InputStreamReader(
+                        connection.getInputStream()));
+                String response = in.readLine();
+                in.close();
+
+                if (response.startsWith("Location")) {
+                    //stwórz nową subskrypcję, nadaj jej resourceId, metric i location i wrzuć do listy
+                    Subscription sub = new Subscription();
+                    sub.setResourceId(resourceId);
+                    sub.setMetric(metric);
+                    sub.setLocation(response.replaceFirst("Location: ", ""));
+                    subscriptions.add(sub);
+                    System.out.println("Dodano subskrypcje!");
+                } else {
+                    //nie przypisuj nic (i wyświetl komunikat o niepowodzeniu)
+                    System.out.println("Blad! Odpowiedz serwera: " + response);
+                }
             } else {
-                //nie przypisuj nic (i wyświetl komunikat o niepowodzeniu)
-                System.out.println("Blad! Odpowiedz serwera: " + response);
+                System.out.println("Blad! Serwer zwrócił kod: " + responseCode);
             }
-            
+
         } catch (MalformedURLException ex) {
             System.out.println("Zly adres!");
         } catch (IOException ex) {
@@ -71,14 +76,14 @@ public class SubscriptionsHandler {
         }
     }
     
-    public static void getSubscription(List<Subscription> subscriptions){
+    public static void getSubscription(List<Subscription> subscriptions) {
         System.out.println("--- getSubscription ---");
         int subIndex = selectSubscription(subscriptions);
-        
+
         Subscription sub = subscriptions.get(subIndex);
-        
+
         //jeżeli ta subskrypcja ma już host i port, nie rób nic, tylko wypisz komunikat
-        if( !( sub.getHost().equals("") || sub.getPort().equals("") ) ){
+        if (!(sub.getHost().equals("") || sub.getPort().equals(""))) {
             System.out.println("Ta subskrypcja jest juz pobrana!");
         } else {
             try {
@@ -87,24 +92,30 @@ public class SubscriptionsHandler {
                 System.out.println(sub.getLocation());
                 URLConnection connection = url.openConnection();
                 ((HttpURLConnection) connection).setRequestMethod("GET");
-                
-                BufferedReader in = new BufferedReader(
-                        new InputStreamReader(
-                        connection.getInputStream()));
-                String response = in.readLine();
-                in.close();
 
-                if (response.startsWith("<subscription id")) {
-                    String host = XMLParser.getValueFromXml(new ByteArrayInputStream(response.getBytes()), "host");
-                    String port = XMLParser.getValueFromXml(new ByteArrayInputStream(response.getBytes()), "port");
-                    
-                    sub.setHost(host);
-                    sub.setPort(port);
-                    
-                    System.out.println("Pobrano subskrypcje!");
+                int responseCode = ((HttpURLConnection) connection).getResponseCode();
+                if (responseCode == 200) {
+
+                    BufferedReader in = new BufferedReader(
+                            new InputStreamReader(
+                            connection.getInputStream()));
+                    String response = in.readLine();
+                    in.close();
+
+                    if (response.startsWith("<subscription id")) {
+                        String host = XMLParser.getValueFromXml(new ByteArrayInputStream(response.getBytes()), "host");
+                        String port = XMLParser.getValueFromXml(new ByteArrayInputStream(response.getBytes()), "port");
+
+                        sub.setHost(host);
+                        sub.setPort(port);
+
+                        System.out.println("Pobrano subskrypcje!");
+                    } else {
+                        //nie przypisuj nic (i wyświetl komunikat o niepowodzeniu)
+                        System.out.println("Blad! Odpowiedz serwera: " + response);
+                    }
                 } else {
-                    //nie przypisuj nic (i wyświetl komunikat o niepowodzeniu)
-                    System.out.println("Blad! Odpowiedz serwera: " + response);
+                    System.out.println("Blad! Serwer zwrócił kod: " + responseCode);
                 }
 
             } catch (MalformedURLException ex) {
@@ -116,7 +127,7 @@ public class SubscriptionsHandler {
             }
         }
     }
-    
+  
     public static void connectHost(List<Subscription> subscriptions){
         System.out.println("--- connectHost ---");
         int subIndex = selectSubscription(subscriptions);
@@ -131,8 +142,10 @@ public class SubscriptionsHandler {
             //aż do zakończenia subskrypcji
             Runnable sensorReader = new SensorReader(sub.getHost(), sub.getPort(), sub.getResourceId(),
                     sub.getMetric(), sub.getLocation().substring( sub.getLocation().lastIndexOf("/")+1 ) );
-            Thread thread = new Thread(sensorReader);
-            thread.start();
+            //Thread thread = new Thread(sensorReader);
+            //thread.start();
+            System.out.println("-- Mozesz zakonczyc polaczenie wpisujac: 'end'");
+            sensorReader.run();
             
             //WARN: program będzie działał tak, że będzie wyświetlał te dane na tym samym okienku konsoli
             //na którym będzie menu - jest to trochę mało przyjemne (musisz np wybrać opcję w menu,
@@ -149,10 +162,15 @@ public class SubscriptionsHandler {
         try {
             //wyślij żądanie do serwera
             URL url = new URL(sub.getLocation());
-            System.out.println(sub.getLocation());
             URLConnection connection = url.openConnection();
+            connection.setDoOutput(true);
             ((HttpURLConnection) connection).setRequestMethod("DELETE");
+            connection.connect();
+            System.out.println("DUPA3");
 
+            int responseCode = ((HttpURLConnection) connection).getResponseCode();
+            //System.out.println("Serwer zwrócił kod: " + responseCode);
+            
         } catch (MalformedURLException ex) {
             System.out.println("Zly adres!");
         } catch (IOException ex) {

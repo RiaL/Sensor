@@ -71,8 +71,7 @@ public class HTTPServer {
                     //DO TESTOWANIA:
                     System.out.println(response);
                     
-                    //TODO: zrobić coś z tymi kodami 202 (najlepiej zamienić na 404 i dodać odpowiednią obsługę w kliencie)
-                    t.sendResponseHeaders(202, response.length());
+                    t.sendResponseHeaders(404, response.length());
                     OutputStream os = t.getResponseBody();
                     os.write(response.getBytes());
                     os.close();
@@ -102,7 +101,7 @@ public class HTTPServer {
                     //DO TESTOWANIA:
                     System.out.println(response);
                     
-                    t.sendResponseHeaders(202, response.length());
+                    t.sendResponseHeaders(404, response.length());
                     OutputStream os = t.getResponseBody();
                     os.write(response.getBytes());
                     os.close();
@@ -114,26 +113,31 @@ public class HTTPServer {
                 int subscriptionId = Integer.parseInt(path.replace(Config.HTTP_SUBSCRIPTIONS_PATH+"/", ""));
                 
                 if( subscriptions.containsKey(new Integer(subscriptionId)) ){
+                
+                    System.out.println("-- DEL: subId: " + subscriptionId);
+                
                     Subscription sub = subscriptions.get(new Integer(subscriptionId));
-                    
+                
                     //usuwanie subskrypcji z monitora
                     sub.getMonitor().removeSubscription(sub.getChannel());
+                
+                    System.out.println("DUPA4");
                     //usuwanie subskrypcji z serwera
                     subscriptions.remove(new Integer(subscriptionId));
                     
                     //odpowiedź nie jest wysyłana do klienta
                     System.out.println("INFO: Subskrypcja " + subscriptionId + " skasowana!");
                     
-//                } else {
-//                    //brak podanej subskrypcji
-//                    String response = "Subscription " + subscriptionId + " not exists";
-//                    //DO TESTOWANIA:
-//                    System.out.println(response);
-//                    
-//                    t.sendResponseHeaders(202, response.length());
-//                    OutputStream os = t.getResponseBody();
-//                    os.write(response.getBytes());
-//                    os.close();
+                } else {
+                    //brak podanej subskrypcji
+                    String response = "Subscription " + subscriptionId + " not exists";
+                    //DO TESTOWANIA:
+                    System.out.println(response);
+                    
+                    t.sendResponseHeaders(404, response.length());
+                    OutputStream os = t.getResponseBody();
+                    os.write(response.getBytes());
+                    os.close();
                 }
                 
                 

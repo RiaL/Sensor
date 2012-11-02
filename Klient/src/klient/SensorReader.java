@@ -1,8 +1,10 @@
 package klient;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.net.Socket;
 import java.net.UnknownHostException;
@@ -32,6 +34,7 @@ public class SensorReader implements Runnable {
         Socket socket = null;
         PrintWriter out = null;
         BufferedReader in = null;
+        BufferedReader stdIn = new BufferedReader(new InputStreamReader(System.in));
 
         try {
             socket = new Socket(host, Integer.parseInt(port));
@@ -52,19 +55,37 @@ public class SensorReader implements Runnable {
             String response;
             CharBuffer target = CharBuffer.allocate(4096);
             int i = 0;
-            
+            boolean run = true;
             //pętla odczytująca napływające dane
             //TODO: czy zamknie się jak zamknie się połączenie z drugiej strony?
-            while ( (i = in.read()) != -1) {
+            while (run && (i = in.read()) != -1) {
+               
+                if (stdIn.ready()) {
+                    String command = stdIn.readLine();
+                    if (command.equalsIgnoreCase("end")) {
+                        try {
+                            BufferedWriter wr = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
+                            wr.write(command);
+                            wr.flush();
+                            run = false;
+                        } catch (IOException e) {
+                        }
+                        Thread.sleep(1000);
+                        continue;
+                    }
+                }
+
                 in.read(target);
                 response = new String(target.array());
-                System.out.println("********* SENSOR DATA:\n" + response);
+                System.out.println(response);
                 target.clear();
             }
 
             out.close();
             in.close();
             socket.close();
+        } catch (InterruptedException ex) {
+            ex.printStackTrace();
         } catch (IOException ex) {
             ex.printStackTrace();
         }

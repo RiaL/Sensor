@@ -38,7 +38,6 @@ public class Monitor implements Runnable {
     
     @Override
     public void run() {
-
         try {
             SocketAddress socketClientAddress = new InetSocketAddress(clientPortNumber);
             clientChannel = ServerSocketChannel.open();
@@ -72,7 +71,8 @@ public class Monitor implements Runnable {
                     if (key.isAcceptable()) {
                         this.accept(key);
                     } else if (key.isWritable()) {
-                        continue;   //writeValueToClient(key);
+                        writeValueToClient(key);
+                        //continue;
                     } else if (key.isReadable()) {
                         if (key.attachment().equals("Client")) {
                             newSubscription(key);
@@ -110,6 +110,11 @@ public class Monitor implements Runnable {
         bufferWithValue.clear();
         bufferWithValue.put(message.getBytes());
         bufferWithValue.flip();
+
+        String text = readFromChannel(key);
+        if (text.contains("end")) {
+            socketChannel.socket().close();
+        }
 
         if (!socketChannel.socket().isClosed()) {
             socketChannel.write(bufferWithValue);
@@ -150,8 +155,8 @@ public class Monitor implements Runnable {
         HTTPServer.register.put(sensorData, this);
         System.out.println("*INFO* SensorsMap size is now: " + sensorsValues.size());
         
-        
-        Set<SelectionKey> selectedKeysSet = this.selector.selectedKeys();
+        //TODO: sprawdź kto nasłuchuje z tego sensora
+        /*Set<SelectionKey> selectedKeysSet = this.selector.selectedKeys();
         Iterator<SelectionKey> keyIterator = selectedKeysSet.iterator();
 
         // iterate through all SelectionKeys
@@ -166,11 +171,12 @@ public class Monitor implements Runnable {
             if (anotherKey.isAcceptable()) {
                 continue;
             } else if (anotherKey.isWritable()) {
+                //TODO: to ma działać tylko dla tych, którzy nasłuchują tego sensora
                 writeValueToClient(anotherKey);
             } else if (key.isReadable()) {
                 continue;
             }
-        }
+        }*/
 
     }
     
@@ -220,13 +226,18 @@ public class Monitor implements Runnable {
         Set<SelectionKey> keysSet = selector.keys();
         Iterator<SelectionKey> keyIterator = keysSet.iterator();
 
+        System.out.println("DUPA w MONITORZE: " + keysSet.size());
+        
         // iterate through all SelectionKeys
         while (keyIterator.hasNext()) {
             SelectionKey key = keyIterator.next();
             keyIterator.remove();
+            System.out.println("+" + key.toString());
             SocketChannel socketChannel = (SocketChannel) key.channel();
+            System.out.println("++");
             
             if (socketChannel.equals(removeSocketChannel)) {
+                System.out.println("@");
                 //close connection
                 socketChannel.socket().close();
                 
@@ -234,6 +245,7 @@ public class Monitor implements Runnable {
                 subscriptionsMap.remove(socketChannel);
                 return;
             }
+            System.out.println("+++");
         }
     }
     

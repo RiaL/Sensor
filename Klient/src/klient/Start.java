@@ -97,7 +97,7 @@ public class Start {
     private static void printMenu(){
         System.out.println("------------------------------ MENU ------------------------------");
         System.out.println("1 - nowa sub;     3 - polacz z hostem;  9 - wypisz wszystkie sub");
-        System.out.println("2 - pobierz sub;  4 - zakoncz sub;      0 - wyjdz");
+        System.out.println("2 - pobierz sub;  [[4 - zakoncz sub]];  0 - wyjdz");
         System.out.println("------------------------------------------------------------------");
     }
 }
