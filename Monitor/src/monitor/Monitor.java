@@ -72,7 +72,7 @@ public class Monitor implements Runnable {
                     if (key.isAcceptable()) {
                         this.accept(key);
                     } else if (key.isWritable()) {
-                        writeValueToClient(key);
+                        continue;   //writeValueToClient(key);
                     } else if (key.isReadable()) {
                         if (key.attachment().equals("Client")) {
                             newSubscription(key);
@@ -132,16 +132,14 @@ public class Monitor implements Runnable {
         
         //add socketChannel to subscription in register in HTTPServer
         Subscription sub = HTTPServer.subscriptions.get(i);
-        HTTPServer.subscriptions.remove(i);
         sub.setChannel(socketChannel);
-        HTTPServer.subscriptions.put(i,sub);
     }
 
     private void addSubscription(SocketChannel socketChannel, Sensor sensorData) throws IOException {
         subscriptionsMap.put(socketChannel, sensorData);
     }
 
-    private void newSensorData(SelectionKey key) throws IOException {
+    private void newSensorData(SelectionKey key) throws IOException, InterruptedException {
         String text = readFromChannel(key);
         String[] fromSensor = text.split(":");
         Sensor sensorData = new Sensor(fromSensor[0], fromSensor[1]);
@@ -151,6 +149,29 @@ public class Monitor implements Runnable {
         sensorsValues.put(sensorData, value);
         HTTPServer.register.put(sensorData, this);
         System.out.println("*INFO* SensorsMap size is now: " + sensorsValues.size());
+        
+        
+        Set<SelectionKey> selectedKeysSet = this.selector.selectedKeys();
+        Iterator<SelectionKey> keyIterator = selectedKeysSet.iterator();
+
+        // iterate through all SelectionKeys
+        while (keyIterator.hasNext()) {
+            SelectionKey anotherKey = keyIterator.next();
+            keyIterator.remove();
+
+            if (!anotherKey.isValid()) {
+                continue;
+            }
+
+            if (anotherKey.isAcceptable()) {
+                continue;
+            } else if (anotherKey.isWritable()) {
+                writeValueToClient(anotherKey);
+            } else if (key.isReadable()) {
+                continue;
+            }
+        }
+
     }
     
     private String readFromChannel(SelectionKey key) throws IOException {

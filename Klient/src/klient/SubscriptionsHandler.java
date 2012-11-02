@@ -23,9 +23,9 @@ public class SubscriptionsHandler {
         try {
             System.out.println("--- newSubscription ---");
 
-            System.out.println("Podaj resourceId:");
+            System.out.print("Podaj resourceId: ");
             resourceId = IO.readString();
-            System.out.println("Podaj metric:");
+            System.out.print("Podaj metric:     ");
             metric = IO.readString();
 
             //stwórz XMLa
@@ -98,7 +98,6 @@ public class SubscriptionsHandler {
                     String host = XMLParser.getValueFromXml(new ByteArrayInputStream(response.getBytes()), "host");
                     String port = XMLParser.getValueFromXml(new ByteArrayInputStream(response.getBytes()), "port");
                     
-                    //TODO: czy taka podmiana wystarczy, żeby się zmieniła wartość na liście?
                     sub.setHost(host);
                     sub.setPort(port);
                     
@@ -121,26 +120,47 @@ public class SubscriptionsHandler {
     public static void connectHost(List<Subscription> subscriptions){
         System.out.println("--- connectHost ---");
         int subIndex = selectSubscription(subscriptions);
-        //TODO: jeżeli ta subskrypcja nie ma hosta i portu, nie rób nic, tylko wypisz komunikat
         
+        Subscription sub = subscriptions.get(subIndex);
         
-        //TODO: stwórz OSOBNY WĄTEK, który: połączy się z serwerem i w pętli wyświetla
-        //napływające dane (tutaj też odpowiednia funkcja w XMLParserze?)
-        //WĄTEK może zostać przerwany tylko w sytuacji zamknięcia połączenia przez serwer!
-        
-        
-        //WARN: program będzie działał tak, że będzie wyświetlał te dane na tym samym okienku konsoli
-        //na którym będzie menu - jest to trochę mało przyjemne (musisz np wybrać opcję w menu,
-        //a tu Ci napływają nowe pomiary), ale tak najprościej to zrobić wg mnie
-        
+        if( sub.getHost().equals("") || sub.getPort().equals("") ){
+            System.out.println("Najpierw pobierz subskrypcje, aby miec host i port!");
+        } else {
+            
+            //w osobnym wątku zostanie nawiązane połączenie i będą wyświetlane napływające dane
+            //aż do zakończenia subskrypcji
+            Runnable sensorReader = new SensorReader(sub.getHost(), sub.getPort(), sub.getResourceId(),
+                    sub.getMetric(), sub.getLocation().substring( sub.getLocation().lastIndexOf("/")+1 ) );
+            Thread thread = new Thread(sensorReader);
+            thread.start();
+            
+            //WARN: program będzie działał tak, że będzie wyświetlał te dane na tym samym okienku konsoli
+            //na którym będzie menu - jest to trochę mało przyjemne (musisz np wybrać opcję w menu,
+            //a tu Ci napływają nowe pomiary), ale tak najprościej to zrobić wg mnie
+        }
     }
     
-    public static void closeSubscription(List<Subscription> subscriptions){
+    public static void closeSubscription(List<Subscription> subscriptions) {
         System.out.println("--- closeSubscription ---");
         int subIndex = selectSubscription(subscriptions);
-        //TODO: wyślij żądanie do serwera
-        
-        
+
+        Subscription sub = subscriptions.get(subIndex);
+
+        try {
+            //wyślij żądanie do serwera
+            URL url = new URL(sub.getLocation());
+            System.out.println(sub.getLocation());
+            URLConnection connection = url.openConnection();
+            ((HttpURLConnection) connection).setRequestMethod("DELETE");
+
+        } catch (MalformedURLException ex) {
+            System.out.println("Zly adres!");
+        } catch (IOException ex) {
+            System.out.println("Problemy z polaczeniem!");
+            System.out.println(ex.getMessage());
+            ex.printStackTrace();
+        }
+
         //skasuj subskrypcję z listy subskrypcji
         subscriptions.remove(subIndex);
     }

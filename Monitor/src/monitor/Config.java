@@ -21,7 +21,7 @@ public class Config {
     /* Buffer for data from sensor */
     public static final int MAX_BUFFER_CAPACITY = 4096;
     
-    /* Values will be read from sensors each 5 sec. */
-    public static final int TIME_INTERVAL = 5000;
+    /* Values will be read from sensors each 1 sec. */
+    public static final int TIME_INTERVAL = 1000;
     
 }

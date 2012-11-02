@@ -122,17 +122,18 @@ public class HTTPServer {
                     subscriptions.remove(new Integer(subscriptionId));
                     
                     //odpowiedź nie jest wysyłana do klienta
+                    System.out.println("INFO: Subskrypcja " + subscriptionId + " skasowana!");
                     
-                } else {
-                    //brak podanej subskrypcji
-                    String response = "Subscription " + subscriptionId + " not exists";
-                    //DO TESTOWANIA:
-                    System.out.println(response);
-                    
-                    t.sendResponseHeaders(202, response.length());
-                    OutputStream os = t.getResponseBody();
-                    os.write(response.getBytes());
-                    os.close();
+//                } else {
+//                    //brak podanej subskrypcji
+//                    String response = "Subscription " + subscriptionId + " not exists";
+//                    //DO TESTOWANIA:
+//                    System.out.println(response);
+//                    
+//                    t.sendResponseHeaders(202, response.length());
+//                    OutputStream os = t.getResponseBody();
+//                    os.write(response.getBytes());
+//                    os.close();
                 }
                 
                 
