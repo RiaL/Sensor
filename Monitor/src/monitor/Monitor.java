@@ -18,7 +18,7 @@ import java.util.Set;
  * @author Krzysztof Kutt
  */
 public class Monitor implements Runnable {
-    private static Map<Sensor, String> sensorsValues;
+    private Map<Sensor, String> sensorsValues;
     private int clientPortNumber;
     private int sensorPortNumber;
     private ByteBuffer buffer;
@@ -26,7 +26,7 @@ public class Monitor implements Runnable {
     private Selector selector;
     private ServerSocketChannel clientChannel;
     private ServerSocketChannel sensorChannel;
-    public static Map<SocketChannel, Sensor> subscriptionsMap = new HashMap<SocketChannel, Sensor>();
+    public Map<SocketChannel, Sensor> subscriptionsMap = new HashMap<SocketChannel, Sensor>();
 
     public Monitor(int clientPortNumber, int sensorPortNumber) {
         sensorsValues = new HashMap<Sensor, String>();
@@ -42,7 +42,6 @@ public class Monitor implements Runnable {
         try {
             SocketAddress socketClientAddress = new InetSocketAddress(clientPortNumber);
             clientChannel = ServerSocketChannel.open();
-
             clientChannel.configureBlocking(false);
             clientChannel.socket().bind(socketClientAddress);
 
@@ -138,7 +137,7 @@ public class Monitor implements Runnable {
         HTTPServer.subscriptions.put(i,sub);
     }
 
-    private static void addSubscription(SocketChannel socketChannel, Sensor sensorData) throws IOException {
+    private void addSubscription(SocketChannel socketChannel, Sensor sensorData) throws IOException {
         subscriptionsMap.put(socketChannel, sensorData);
     }
 
@@ -150,6 +149,7 @@ public class Monitor implements Runnable {
         value = value.trim();
         System.out.println("*INFO* New entry in sensorsMap. Key: " + sensorData + " Value: " + value);
         sensorsValues.put(sensorData, value);
+        HTTPServer.register.put(sensorData, this);
         System.out.println("*INFO* SensorsMap size is now: " + sensorsValues.size());
     }
     

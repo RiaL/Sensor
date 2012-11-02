@@ -15,10 +15,10 @@ import java.util.List;
  *    </subscribe>
  * 
  *    w odpowiedzi:
- *    - Location: 127.0.0.1/subscriptions/190   (numer subskrypcji)
+ *    - Location: http://127.0.0.1:8000/subscriptions/190   (numer subskrypcji)
  *    - Error 404, gdy nie ma takiego zasobu/metryki
  * 
- * 2) GET 127.0.0.1/subscriptions/190   (podane w odpowiedzi w punkcie wyżej)
+ * 2) GET http://127.0.0.1:8000/subscriptions/190   (podane w odpowiedzi w punkcie wyżej)
  * 
  *    w odpowiedzi:
  *    - Error 404, gdy nie ma subskrypcji
@@ -28,13 +28,16 @@ import java.util.List;
  *      </subscription>
  * 
  * 3) connect z podanym hostem i portem
+ *    wysłać dane:
+ *        subscriptionID-resourceId-metric
+ * 
  *    w odpowiedzi będą w losowych momentach czasu napływały pomiary postaci:
  *    <measurement resourceId="host1" metric="param1">
  *      <timestamp>[tutaj timestamp]</timestamp>
  *      <value>0.92</value>
  *    </measurement>
  * 
- * 4) DELETE 127.0.0.1/subscriptions/190
+ * 4) DELETE http://127.0.0.1:8000/subscriptions/190
  * 
  *    w odpowiedzi:
  *    - Error 404 w przypadku braku subskrypcji
@@ -46,7 +49,6 @@ import java.util.List;
 public class Start {
 
     public static void main(String[] args) {
-        System.out.println("Witaj w Kliencie!");
         List<Subscription> subscriptions = new LinkedList<Subscription>();
         int opt = -1;
         
@@ -76,6 +78,12 @@ public class Start {
                         else
                             System.out.println("Brak subskrypcji!");
                         break;
+                    case 9 :
+                        if(subscriptions.size() > 0)
+                            SubscriptionsHandler.listSubscriptions(subscriptions);
+                        else
+                            System.out.println("Brak subskrypcji!");
+                        break;
                 }
             } catch (IOException ex) {
                 //do nothing (została podana zła liczba, wyświetli się ponownie menu)
@@ -87,13 +95,9 @@ public class Start {
     }
     
     private static void printMenu(){
-        System.out.println("-----------------------");
-        System.out.println("Co chcesz zrobic?");
-        System.out.println("1 - nowa subskrypcja");
-        System.out.println("2 - pobierz subskrypcje");
-        System.out.println("3 - polacz z hostem");
-        System.out.println("4 - zakoncz subskrypcje");
-        System.out.println("0 - wyjdz");
-        System.out.println("-----------------------");
+        System.out.println("------------------------------ MENU ------------------------------");
+        System.out.println("1 - nowa sub;     3 - polacz z hostem;  9 - wypisz wszystkie sub");
+        System.out.println("2 - pobierz sub;  4 - zakoncz sub;      0 - wyjdz");
+        System.out.println("------------------------------------------------------------------");
     }
 }

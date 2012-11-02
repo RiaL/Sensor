@@ -66,4 +66,9 @@ public class Sensor {
         result = prime * result + ((resourceId == null) ? 0 : resourceId.hashCode());
         return result;
     }
+
+    @Override
+    public String toString() {
+        return "[" + resourceId + ":" + metric + "]";
+    }
 }

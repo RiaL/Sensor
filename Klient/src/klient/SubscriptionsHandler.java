@@ -1,6 +1,7 @@
 package klient;
 
 import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
@@ -73,24 +74,47 @@ public class SubscriptionsHandler {
     public static void getSubscription(List<Subscription> subscriptions){
         System.out.println("--- getSubscription ---");
         int subIndex = selectSubscription(subscriptions);
+        
         Subscription sub = subscriptions.get(subIndex);
         
         //jeżeli ta subskrypcja ma już host i port, nie rób nic, tylko wypisz komunikat
-        if( sub.getHost().equals("") || sub.getPort().equals("") ){
+        if( !( sub.getHost().equals("") || sub.getPort().equals("") ) ){
             System.out.println("Ta subskrypcja jest juz pobrana!");
         } else {
-            
-            //TODO: wyślij żądanie do serwera
-        
-        
-            //TODO: w zależności od odpowiedzi:
-            //albo nie przypisuj nic (i wyświetl komunikat o niepowodzeniu)
-        
-        
-            //albo wyciągnij host i port z XMLa (funkcja w XMLParser) i przypisz do odpowiedniej subskrypcji na liście
-            
-            
-            
+            try {
+                //wyślij żądanie do serwera
+                URL url = new URL(sub.getLocation());
+                System.out.println(sub.getLocation());
+                URLConnection connection = url.openConnection();
+                ((HttpURLConnection) connection).setRequestMethod("GET");
+                
+                BufferedReader in = new BufferedReader(
+                        new InputStreamReader(
+                        connection.getInputStream()));
+                String response = in.readLine();
+                in.close();
+
+                if (response.startsWith("<subscription id")) {
+                    String host = XMLParser.getValueFromXml(new ByteArrayInputStream(response.getBytes()), "host");
+                    String port = XMLParser.getValueFromXml(new ByteArrayInputStream(response.getBytes()), "port");
+                    
+                    //TODO: czy taka podmiana wystarczy, żeby się zmieniła wartość na liście?
+                    sub.setHost(host);
+                    sub.setPort(port);
+                    
+                    System.out.println("Pobrano subskrypcje!");
+                } else {
+                    //nie przypisuj nic (i wyświetl komunikat o niepowodzeniu)
+                    System.out.println("Blad! Odpowiedz serwera: " + response);
+                }
+
+            } catch (MalformedURLException ex) {
+                System.out.println("Zly adres!");
+            } catch (IOException ex) {
+                System.out.println("Problemy z polaczeniem!");
+                System.out.println(ex.getMessage());
+                ex.printStackTrace();
+            }
         }
     }
     
@@ -127,15 +151,13 @@ public class SubscriptionsHandler {
                            //zwróci indeks pierwszej subskrypcji
         
         try {
-            System.out.println("Ktora subskrypcje wybierasz?");
-            //TODO: wyświetl listę dostępnych subskrypcji (tak, żeby było widać wszystkie dane)
-            //ponumeruj je indeksami z listy (użytkownik ma wybrać właśnie indeks)
-            
+            System.out.println("Ktora subskrypcje wybierasz (podaj indeks)?");
+            listSubscriptions(subscriptions);
             
             //wczytaj liczbę wpisaną przez użytkownika
             int opt = IO.readInteger();
             
-            if( opt > 0 && opt < subscriptions.size())
+            if( opt >= 0 && opt < subscriptions.size())
                 subIndex = opt;
             
         } catch (IOException ex) {
@@ -143,5 +165,14 @@ public class SubscriptionsHandler {
         }
         
         return subIndex;
+    }
+
+    public static void listSubscriptions(List<Subscription> subscriptions) {
+        System.out.println("***** SUBSKRYPCJE *****");
+        for (int i = 0; i < subscriptions.size(); i++) {
+            Subscription sub = subscriptions.get(i);
+            System.out.println(i + " -> [" + sub.getResourceId() + ":" + sub.getMetric() + "], " + sub.getLocation()
+                    + ", TCP: " + sub.getHost() + ":" + sub.getPort());
+        }
     }
 }

@@ -56,7 +56,7 @@ public class HTTPServer {
                     subscriptions.put(i, new Subscription(sensor, monitor));
         
                     //wyślij odpowiedź do klienta
-                    String response = "Location: 127.0.0.1" + Config.HTTP_SUBSCRIPTIONS_PATH + "/" + i;
+                    String response = "Location: http://127.0.0.1:8000" + Config.HTTP_SUBSCRIPTIONS_PATH + "/" + i;
                     //DO TESTOWANIA:
                     System.out.println(response);
                     
@@ -71,6 +71,7 @@ public class HTTPServer {
                     //DO TESTOWANIA:
                     System.out.println(response);
                     
+                    //TODO: zrobić coś z tymi kodami 202 (najlepiej zamienić na 404 i dodać odpowiednią obsługę w kliencie)
                     t.sendResponseHeaders(202, response.length());
                     OutputStream os = t.getResponseBody();
                     os.write(response.getBytes());

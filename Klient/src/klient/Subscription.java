@@ -5,11 +5,11 @@ package klient;
  * @author Krzysztof Kutt
  */
 public class Subscription {
-    String resourceId;
-    String metric;
-    String location;
-    String host;
-    String port;
+    private String resourceId;
+    private String metric;
+    private String location;
+    private String host;
+    private String port;
     
     public Subscription(){
         this.resourceId = "";

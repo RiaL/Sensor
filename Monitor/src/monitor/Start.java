@@ -17,10 +17,10 @@ import java.io.IOException;
  *    </subscribe>
  * 
  *    w odpowiedzi:
- *    - Location: 127.0.0.1/subscriptions/190   (numer subskrypcji)
+ *    - Location: http://127.0.0.1:8000/subscriptions/190   (numer subskrypcji)
  *    - Error 404, gdy nie ma takiego zasobu/metryki
  * 
- * 2) GET 127.0.0.1/subscriptions/190   (podane w odpowiedzi w punkcie wyżej)
+ * 2) GET http://127.0.0.1:8000/subscriptions/190   (podane w odpowiedzi w punkcie wyżej)
  * 
  *    w odpowiedzi:
  *    - Error 404, gdy nie ma subskrypcji
@@ -39,7 +39,7 @@ import java.io.IOException;
  *      <value>0.92</value>
  *    </measurement>
  * 
- * 4) DELETE 127.0.0.1/subscriptions/190
+ * 4) DELETE http://127.0.0.1:8000/subscriptions/190
  * 
  *    w odpowiedzi:
  *    - Error 404 w przypadku braku subskrypcji
@@ -69,11 +69,13 @@ public class Start {
         }
         
         
-        Monitor monitor1 = new Monitor(Config.M1_CLIENT_PORT, Config.M1_SENSOR_PORT);
-        monitor1.run();
+        Runnable monitor1 = new Monitor(Config.M1_CLIENT_PORT, Config.M1_SENSOR_PORT);
+        Thread thread1 = new Thread(monitor1);
+	thread1.start();
         
         Monitor monitor2 = new Monitor(Config.M2_CLIENT_PORT, Config.M2_SENSOR_PORT);
-        monitor2.run();
+        Thread thread2 = new Thread(monitor2);
+	thread2.start();
         
     }
 }
